@@ -1,0 +1,269 @@
+/*MinVersion*/
+*{
+	border: 0px solid yellow !important;
+}
+
+*{
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+@media only screen and (max-width: 900px){
+	#leftSider{
+		background-color: #ff7000;
+	}
+
+	#profileCap{
+	font-size: 18px;
+	color:#0F0F0F;
+	padding: 20px 0 20px 20px;
+	}
+
+	#myMenu{
+	max-width: 115%;
+	}
+}
+
+
+
+
+body{
+	background-color:#000;
+	/*background-image: url("background.jpg");*/
+}
+
+.container {
+	background-color:#333333;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 900px;
+}
+
+td{
+	width: 10%;
+	padding-left: 10px;
+}
+
+h1{
+	font-family: 'Orbitron', sans-serif;
+	font-weight: 400;
+	font-size:36px; 
+	color:rgb(255,112,0);
+	padding: 0 0 0 15px;
+}
+
+h2{
+	font-family: 'Gruppo', cursive;
+	font-weight: 400;
+	font-size:20px; 
+	color:rgb(255,112,0);
+	padding: 0 0 0 15px;
+}
+
+h3{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:16px; 
+	color:rgb(191, 191, 191);
+}
+
+h4{
+	font-family: 'Orbitron', sans-serif;
+	font-weight: 400;
+	font-size:20px; 
+	color:rgb(0,0,0);
+}
+
+p{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:18px; 
+	color:#bfbfbf;
+	padding: 15px 10px 0 10px;
+}
+
+li {
+    background: #3399ff;
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:18px; 
+	color:#bfbfbf;
+	padding: 0px 0px 0px 30px;
+}
+.tableTitle{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 700;
+	font-size:20px; 
+	color:#ff7000;
+}
+
+.galleryPic{
+	padding: 15px 10px 0 10px;
+}
+
+.galleryCaption{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:18px; 
+	color:#0f0f0f;
+	border-radius: 2px;
+	border-bottom-right-radius: 20px;
+	border-top-left-radius: 20px;
+	background-color: #bfbfbf;
+	padding: 15px;
+	margin:15px 0 0 0;
+}
+
+.repositoryCaption{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:18px; 
+	color:#0f0f0f;
+	border-radius: 2px;
+	border-bottom-right-radius: 5px;
+	border-top-left-radius: 5px;
+	background-color: #bfbfbf;
+	padding: 5px;
+	margin:5px 0 0 0;
+}
+
+.rowTitle{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 700;
+}
+
+#myMenu{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:18px; 
+	background-color:#0f0f0f;
+	max-width: 105%;
+	height: auto; 
+	display: block
+}
+
+#leftSider{
+	font-family: 'Cuprum', sans-serif;
+	font-weight: 400;
+	font-size:14px; 
+	border-radius: 2px;
+	border-bottom-right-radius: 20px;
+	border-top-left-radius: 20px;
+	padding-top: 20px;
+	background-color: #bfbfbf;
+	margin: 40px 20px 0 40px;
+}
+
+#myContent{
+	padding: 15px;
+}
+
+
+
+#profileCap{
+	font-size: 18px;
+	color:#0f0f0f;
+	padding: 20px 0 20px 20px;
+}
+
+
+#rightSider {
+    padding: 15px;
+}
+
+
+/* LINK STYLE*/
+a.third:link {
+    color: #0b0b0b;
+    text-decoration: none;
+}
+
+/* visited link in left sider*/
+a.third:visited {
+    color: #0b0b0b;
+    text-decoration: none;
+}
+
+/* mouse over link in left sider*/
+a.third:hover {
+    color: #FFC080;
+    text-decoration: none;
+}
+
+/* selected link in left sider*/
+a.third:active {
+    color: #bfbfbf;
+    text-decoration: none;
+}
+
+/* unvisited link */
+a:link {
+    color: #bfbfbf;
+    text-decoration: none;
+}
+
+/* visited link */
+a:visited {
+    color: #bfbfbf;
+    text-decoration: none;
+}
+
+/* mouse over link */
+a:hover {
+    color: #FFC080;
+    text-decoration: none;
+}
+
+/* selected link */
+a:active {
+    color: #bfbfbf;
+    text-decoration: none;
+}
+
+/* unvisited link in paragraph*/
+p a:link {
+    color: #ff7000;
+    text-decoration: none;
+}
+
+/* visited link in paragraph*/
+p a:visited {
+    color: #ff7000;
+    text-decoration: none;
+}
+
+/* mouse over link in paragraph*/
+p a:hover {
+    color: #FFC080;
+    text-decoration: none;
+}
+
+/* selected link in paragraph*/
+p a:active {
+    color: #bfbfbf;
+    text-decoration: none;
+}
+
+#copyright {
+  text-align: center;
+  float: none !important;
+  background-color: #000;
+}
+
+@media (max-width: 991px) {
+  #copyright p {
+    float: none !important;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    background-color:#333333;
+    border-radius: 5px;
+    width: 100%;
+
+  }
+
+  .glyphicon-copyright-mark:before {
+  content: "\e194";
+}
