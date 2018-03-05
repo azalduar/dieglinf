@@ -36,9 +36,9 @@ globals
  avg-path-length                         ;; networks' avergae path length
  density                                 ;; networks' density
  isolates                                ;; number of isolates in the network
- adopters                                ;; overall nuber of adopters
- in-group-adopters
- out-group-adopters
+ overall-adoption                        ;; overall nuber of adopters
+ in-group-adoption
+ out-group-adoption
 
 
  ;; These variables are used to calculate the Pearson correlation coefficient between boundaries. These variables act mostly as local variables/place holders. For more details see the "compute-correlations" procedure
@@ -59,6 +59,7 @@ turtles-own
  my-similarity-to-all-alters-list        ;; list of ego's social similarity to each and every other alter
 
  Ai                                      ;; Ai = 1 if agent 1 adopted the innonvation, 0 otherwise
+ Ti                                      ;; Agent i's adoption treshold
  my-brokerage-w                          ;; Agent i's intercultural capacity for brokerage
  my-neighbors                            ;; Agent i's (inmediate) neighbors
  my-degr                                 ;; Agent i's degree
@@ -103,6 +104,7 @@ if innovators = "brokerage"
 ]
 order-potential-innovators
 activate-seed-neighborhood
+assign-adoption-threshold
 
 ;; UNCOMMENT IF WANT TO USE PROFILER
 
@@ -117,9 +119,9 @@ social-diffusion
 
 ask turtle seed
 [
- set adopters           ((count other turtles with    [Ai = 1 and shape = "default"]) / (count other turtles with [shape = "default"]))  ;; overall proportion of adopters. Note that only agents outside the seed neighborhoos (i.e. those with a default shape) are included here.
- set in-group-adopters  ((count other turtles with    [Ai = 1 and shape = "default" and my-primary-G = [my-primary-G] of turtle seed]) / (count other turtles with [my-primary-G = [my-primary-G] of turtle seed and shape = "default"]))       ;; proportion of in-group adopters of seed agent. Note that only agents outside the seed neighborhoos (i.e. those with a default shape) are included here.
- set out-group-adopters ((count other turtles with    [Ai = 1 and shape = "default" and my-primary-G != [my-primary-G] of turtle seed]) / (count other turtles with [my-primary-G != [my-primary-G] of turtle seed and shape = "default"]))     ;; proportion of out-group adopters of seed agent. Note that only agents outside the seed neighborhoos (i.e. those with a default shape) are included here.
+ set overall-adoption   ((count other turtles with    [Ai = 1 and shape = "default"]) / (count other turtles with [shape = "default"]))  ;; overall proportion of adopters. Note that only agents outside the seed neighborhoos (i.e. those with a default shape) are included here.
+ set in-group-adoption  ((count other turtles with    [Ai = 1 and shape = "default" and my-primary-G = [my-primary-G] of turtle seed]) / (count other turtles with [my-primary-G = [my-primary-G] of turtle seed and shape = "default"]))       ;; proportion of in-group adopters of seed agent. Note that only agents outside the seed neighborhoos (i.e. those with a default shape) are included here.
+ set out-group-adoption ((count other turtles with    [Ai = 1 and shape = "default" and my-primary-G != [my-primary-G] of turtle seed]) / (count other turtles with [my-primary-G != [my-primary-G] of turtle seed and shape = "default"]))     ;; proportion of out-group adopters of seed agent. Note that only agents outside the seed neighborhoos (i.e. those with a default shape) are included here.
 ]
 
 if ticks > Q - 1
@@ -128,6 +130,22 @@ if ticks > Q - 1
 ]
 
 tick ;; advance the tick (i.e. time) counter by one
+end
+
+to assign-adoption-threshold
+
+ask turtles
+[
+ set Ti random-normal Tmean Tsd  ;; each turtle generates a random number (ej) drawn from a normal distribution with mean = mean-2 and standard deviation = std-deviation-2
+ if (Ti < Tmean - 2 * Tsd)       ;; cap lower bound of learning rate (ej) at 2 standard deviations
+ [
+  set Ti (Tmean - 2 * Tsd)
+ ]
+ if (Ti > Tmean + 2 * Tsd)
+ [
+  set Ti (Tmean + 2 * Tsd)      ;; cap upper bound of learning rate (ej) at 2 standard deviations
+ ]
+]
 end
 
 to social-diffusion
@@ -156,13 +174,13 @@ if any? turtles with [Ai = 0 and shape = "default"]           ;; if there is any
         set size 1
        ]
       ]
-      [                             ;; with probability 1 - M
-       if ([item alter my-similarity-to-all-alters-list] of turtle ego) * 10 >= random 11 ;; ask ego to become an adopter if the social similarity to alter is >= random number between 0 and 10
+      [                           ;; with probability 1 - M
+       if [item alter my-similarity-to-all-alters-list] of turtle ego >= Ti
        [
         ask turtle ego
         [
-        set Ai 1
-        set size 1.5
+         set Ai 1
+         set size 1.5
         ]
        ]
       ]
@@ -170,7 +188,7 @@ if any? turtles with [Ai = 0 and shape = "default"]           ;; if there is any
 
      ;; IF AGENTS CANNOT MAKE MISTAKES
      [
-      if ([item alter my-similarity-to-all-alters-list] of turtle ego) * 10 >= random 11 ;; ask ego to become an adopter if the social similarity to alter is >= random number between 0 and 10
+      if [item alter my-similarity-to-all-alters-list] of turtle ego >= Ti
       [
        ask turtle ego
        [
@@ -951,7 +969,7 @@ C
 C
 0
 1
-0.0
+0.6
 0.01
 1
 NIL
@@ -966,7 +984,7 @@ H
 H
 0
 1
-0.0
+1.0
 0.01
 1
 NIL
@@ -1029,8 +1047,8 @@ SLIDER
 N
 N
 100
-900
-900.0
+500
+300.0
 10
 1
 NIL
@@ -1052,10 +1070,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-9
-363
-164
-396
+8
+388
+163
+421
 do-plots?
 do-plots?
 1
@@ -1063,10 +1081,10 @@ do-plots?
 -1000
 
 MONITOR
-225
-499
-323
-544
+223
+588
+321
+633
 consolidation coef
 mean-corr
 4
@@ -1074,10 +1092,10 @@ mean-corr
 11
 
 MONITOR
-225
-364
-323
-409
+223
+453
+321
+498
 NIL
 mean-degree
 4
@@ -1085,10 +1103,10 @@ mean-degree
 11
 
 MONITOR
-225
-407
-323
-452
+223
+496
+321
+541
 density
 density
 3
@@ -1111,10 +1129,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-224
-273
-324
-318
+222
+362
+322
+407
 path length
 avg-path-length
 4
@@ -1122,10 +1140,10 @@ avg-path-length
 11
 
 MONITOR
-224
-319
-323
-364
+222
+408
+321
+453
 clustering coeff
 clustering
 4
@@ -1133,10 +1151,10 @@ clustering
 11
 
 SWITCH
-5
-406
-175
-439
+4
+431
+174
+464
 G-even-split?
 G-even-split?
 0
@@ -1144,42 +1162,12 @@ G-even-split?
 -1000
 
 SLIDER
-4
-442
-176
-475
+3
+467
+175
+500
 PG1
 PG1
-0
-1
-0.0
-0.001
-1
-NIL
-HORIZONTAL
-
-SLIDER
-4
-475
-176
-508
-PG2
-PG2
-0
-1
-0.0
-0.001
-1
-NIL
-HORIZONTAL
-
-SLIDER
-4
-506
-176
-539
-PG3
-PG3
 0
 1
 0.0
@@ -1190,9 +1178,39 @@ HORIZONTAL
 
 SLIDER
 3
-540
-176
-573
+500
+175
+533
+PG2
+PG2
+0
+1
+0.0
+0.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+3
+531
+175
+564
+PG3
+PG3
+0
+1
+0.0
+0.001
+1
+NIL
+HORIZONTAL
+
+SLIDER
+2
+565
+175
+598
 PG4
 PG4
 0
@@ -1204,10 +1222,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-2
-575
-176
-608
+1
+600
+175
+633
 PG5
 PG5
 0
@@ -1241,31 +1259,31 @@ E-I
 11
 
 MONITOR
-1082
-437
-1202
-482
+1079
+361
+1199
+406
 overall adoption
-adopters
+overall-adoption
 3
 1
 11
 
 CHOOSER
-6
-239
-165
-284
+5
+264
+164
+309
 innovators
 innovators
 "random" "degree" "brokerage" "betweenness"
-0
+1
 
 PLOT
-860
-22
-1219
-305
+855
+10
+1171
+252
 Adoption over time
 Time
 Proportion adopters
@@ -1277,9 +1295,9 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot adopters"
-"pen-1" 1.0 0 -13840069 true "" "plot in-group-adopters"
-"pen-2" 1.0 0 -2674135 true "" "plot out-group-adopters"
+"default" 1.0 0 -16777216 true "" "plot overall-adoption"
+"pen-1" 1.0 0 -13840069 true "" "plot in-group-adoption"
+"pen-2" 1.0 0 -2674135 true "" "plot out-group-adoption"
 
 MONITOR
 582
@@ -1293,10 +1311,10 @@ modularity
 11
 
 MONITOR
-225
-452
-323
-497
+223
+541
+321
+586
 transitivity
 transitivity
 3
@@ -1304,10 +1322,10 @@ transitivity
 11
 
 SWITCH
-6
-329
-165
-362
+5
+354
+164
+387
 random-net?
 random-net?
 1
@@ -1327,9 +1345,9 @@ avg-prop-same-G
 
 TEXTBOX
 855
-339
+265
 1078
-389
+315
 OUT-GROUP ADOPTION
 20
 15.0
@@ -1337,9 +1355,9 @@ OUT-GROUP ADOPTION
 
 TEXTBOX
 855
-441
+367
 1050
-467
+393
 OVERALL-ADOPTION
 20
 0.0
@@ -1347,9 +1365,9 @@ OVERALL-ADOPTION
 
 TEXTBOX
 854
-393
+319
 1100
-421
+347
 IN-GROUP-ADOPTION
 20
 65.0
@@ -1357,31 +1375,31 @@ IN-GROUP-ADOPTION
 
 MONITOR
 1078
-329
+255
 1198
-374
+300
 out-group adoption
-out-group-adopters
+out-group-adoption
 3
 1
 11
 
 MONITOR
 1078
-383
+309
 1198
-428
+354
 in-group adoption
-in-group-adopters
+in-group-adoption
 3
 1
 11
 
 CHOOSER
-6
-284
-165
-329
+5
+309
+164
+354
 distance-measure
 distance-measure
 "smc"
@@ -1396,7 +1414,7 @@ Q
 Q
 10000
 50000
-10.0
+10000.0
 500
 1
 NIL
@@ -1411,7 +1429,7 @@ M
 M
 0
 0.1
-0.0
+0.01
 0.01
 1
 NIL
@@ -1431,6 +1449,64 @@ F
 1
 NIL
 HORIZONTAL
+
+SLIDER
+165
+174
+303
+207
+Tmean
+Tmean
+0
+1
+0.5
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+5
+210
+145
+243
+Tsd
+Tsd
+0
+0.2
+0.05
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+169
+214
+342
+360
+Threshold Distribution
+NIL
+NIL
+0.0
+1.05
+0.0
+300.0
+true
+false
+"histogram [Ti] of turtles" ""
+PENS
+"default" 0.05 1 -16777216 true "" "histogram [Ti] of turtles"
+
+TEXTBOX
+853
+403
+1415
+711
+C: \t\tConsolidation\nH: \t\tHomophily\nM: \t\tNoise\nB: \t\tNumber of secondary boundaries\nZ: \t\tMean degree\nG: \t\tNumber of groups\nN: \t\tNumber of agents\nF: \t\tMargin of error for C\nQ: \t\tNumber of iterations\nTmean: \t\tAdoption threshold mean\nTsd: \t\tAdoption threshold standard deviation\nInovators: \tSelect seed agent\nG-even-plit?: \tShould each group be of equal size?\nPG1-PG5: \tIf groups are are not of equal size, specify the proportion of agents in each group\n\nFor a detailed explanation of the code: http://diegoleal.info/files/Dissertation_ABM_Dleal/\nDiego F. Leal (www.diegoleal.info)
+11
+105.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1779,7 +1855,7 @@ NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="ID_2_experiment_G_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_1_experiment_base_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -1790,9 +1866,9 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
       <value value="0"/>
     </enumeratedValueSet>
@@ -1837,6 +1913,323 @@ NetLogo 6.0.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="N">
       <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Z">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="B">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
+    <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
+  </experiment>
+  <experiment name="ID_2_Tmean_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>mean-corr</metric>
+    <metric>GSI</metric>
+    <metric>E-I</metric>
+    <metric>modularity</metric>
+    <metric>transitivity</metric>
+    <metric>clustering</metric>
+    <metric>avg-prop-same-G</metric>
+    <metric>avg-path-length</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
+    <enumeratedValueSet variable="PG1">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG2">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG3">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG4">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG5">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G-even-split?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="random-net?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="do-plots?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distance-measure">
+      <value value="&quot;smc&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="innovators">
+      <value value="&quot;degree&quot;"/>
+      <value value="&quot;brokerage&quot;"/>
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;betweenness&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="F">
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="M">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Q">
+      <value value="10000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.4"/>
+      <value value="0.6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Z">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="B">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
+    <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
+  </experiment>
+  <experiment name="ID_3_Tmean2_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>mean-corr</metric>
+    <metric>GSI</metric>
+    <metric>E-I</metric>
+    <metric>modularity</metric>
+    <metric>transitivity</metric>
+    <metric>clustering</metric>
+    <metric>avg-prop-same-G</metric>
+    <metric>avg-path-length</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
+    <enumeratedValueSet variable="PG1">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG2">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG3">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG4">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG5">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G-even-split?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="random-net?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="do-plots?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distance-measure">
+      <value value="&quot;smc&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="innovators">
+      <value value="&quot;degree&quot;"/>
+      <value value="&quot;brokerage&quot;"/>
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;betweenness&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="F">
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="M">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Q">
+      <value value="10000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.3"/>
+      <value value="0.7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Z">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="B">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
+    <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
+  </experiment>
+  <experiment name="ID_4_Tsd_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>mean-corr</metric>
+    <metric>GSI</metric>
+    <metric>E-I</metric>
+    <metric>modularity</metric>
+    <metric>transitivity</metric>
+    <metric>clustering</metric>
+    <metric>avg-prop-same-G</metric>
+    <metric>avg-path-length</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
+    <enumeratedValueSet variable="PG1">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG2">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG3">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG4">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG5">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G-even-split?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="random-net?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="do-plots?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distance-measure">
+      <value value="&quot;smc&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="innovators">
+      <value value="&quot;degree&quot;"/>
+      <value value="&quot;brokerage&quot;"/>
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;betweenness&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="F">
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="M">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Q">
+      <value value="10000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.01"/>
+      <value value="0.015"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Z">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="B">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
+    <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
+  </experiment>
+  <experiment name="ID_5_G_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>mean-corr</metric>
+    <metric>GSI</metric>
+    <metric>E-I</metric>
+    <metric>modularity</metric>
+    <metric>transitivity</metric>
+    <metric>clustering</metric>
+    <metric>avg-prop-same-G</metric>
+    <metric>avg-path-length</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
+    <enumeratedValueSet variable="PG1">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG2">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG3">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG4">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG5">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G-even-split?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="random-net?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="do-plots?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distance-measure">
+      <value value="&quot;smc&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="innovators">
+      <value value="&quot;degree&quot;"/>
+      <value value="&quot;brokerage&quot;"/>
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;betweenness&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="F">
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="M">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Q">
+      <value value="10000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Z">
       <value value="5"/>
@@ -1851,7 +2244,7 @@ NetLogo 6.0.2
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
   </experiment>
-  <experiment name="ID_1_experiment_base_500" repetitions="500" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_6_B_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -1862,9 +2255,9 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
       <value value="0"/>
     </enumeratedValueSet>
@@ -1910,11 +2303,18 @@ NetLogo 6.0.2
     <enumeratedValueSet variable="N">
       <value value="300"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="Z">
       <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="B">
-      <value value="9"/>
+      <value value="4"/>
+      <value value="14"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="G">
       <value value="5"/>
@@ -1922,7 +2322,7 @@ NetLogo 6.0.2
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
   </experiment>
-  <experiment name="ID_3_experiment_B_100" repetitions="1" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_7_Z_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -1933,9 +2333,9 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
       <value value="0"/>
     </enumeratedValueSet>
@@ -1964,7 +2364,10 @@ NetLogo 6.0.2
       <value value="&quot;smc&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="innovators">
+      <value value="&quot;degree&quot;"/>
       <value value="&quot;brokerage&quot;"/>
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;betweenness&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="F">
       <value value="0.001"/>
@@ -1973,14 +2376,21 @@ NetLogo 6.0.2
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Q">
+      <value value="10000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Z">
+      <value value="7"/>
       <value value="10"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="N">
-      <value value="700"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Z">
-      <value value="5"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="B">
       <value value="9"/>
     </enumeratedValueSet>
@@ -1990,7 +2400,7 @@ NetLogo 6.0.2
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
   </experiment>
-  <experiment name="ID_4_experiment_Z_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_8_Tsd_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -2001,9 +2411,9 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
       <value value="0"/>
     </enumeratedValueSet>
@@ -2049,78 +2459,12 @@ NetLogo 6.0.2
     <enumeratedValueSet variable="N">
       <value value="300"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="Z">
-      <value value="4"/>
-      <value value="8"/>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="B">
-      <value value="9"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="G">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
-    <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
-  </experiment>
-  <experiment name="ID_5_experiment_N_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <metric>mean-corr</metric>
-    <metric>GSI</metric>
-    <metric>E-I</metric>
-    <metric>modularity</metric>
-    <metric>transitivity</metric>
-    <metric>clustering</metric>
-    <metric>avg-prop-same-G</metric>
-    <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
-    <enumeratedValueSet variable="PG1">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="PG2">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="PG3">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="PG4">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="PG5">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="G-even-split?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="random-net?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="do-plots?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="distance-measure">
-      <value value="&quot;smc&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="innovators">
-      <value value="&quot;degree&quot;"/>
-      <value value="&quot;brokerage&quot;"/>
-      <value value="&quot;random&quot;"/>
-      <value value="&quot;betweenness&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="F">
-      <value value="0.001"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="M">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="Q">
-      <value value="10000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="N">
-      <value value="100"/>
-      <value value="500"/>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.1"/>
+      <value value="0.2"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Z">
       <value value="5"/>
@@ -2134,7 +2478,7 @@ NetLogo 6.0.2
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
   </experiment>
-  <experiment name="ID_6_experiment_Q_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_9_Q_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -2145,9 +2489,9 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
       <value value="0"/>
     </enumeratedValueSet>
@@ -2193,6 +2537,12 @@ NetLogo 6.0.2
     <enumeratedValueSet variable="N">
       <value value="300"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="Z">
       <value value="5"/>
     </enumeratedValueSet>
@@ -2205,7 +2555,7 @@ NetLogo 6.0.2
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
   </experiment>
-  <experiment name="ID_7_experiment_M_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_10_M_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -2216,9 +2566,86 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
+    <enumeratedValueSet variable="PG1">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG2">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG3">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG4">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PG5">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G-even-split?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="random-net?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="do-plots?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="distance-measure">
+      <value value="&quot;smc&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="innovators">
+      <value value="&quot;degree&quot;"/>
+      <value value="&quot;brokerage&quot;"/>
+      <value value="&quot;random&quot;"/>
+      <value value="&quot;betweenness&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="F">
+      <value value="0.001"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="M">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Q">
+      <value value="10000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N">
+      <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Z">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="B">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="G">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
+    <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
+  </experiment>
+  <experiment name="ID_11_M_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>mean-corr</metric>
+    <metric>GSI</metric>
+    <metric>E-I</metric>
+    <metric>modularity</metric>
+    <metric>transitivity</metric>
+    <metric>clustering</metric>
+    <metric>avg-prop-same-G</metric>
+    <metric>avg-path-length</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
       <value value="0"/>
     </enumeratedValueSet>
@@ -2257,13 +2684,18 @@ NetLogo 6.0.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="M">
       <value value="0.05"/>
-      <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Q">
       <value value="10000"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="N">
       <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Z">
       <value value="5"/>
@@ -2277,7 +2709,7 @@ NetLogo 6.0.2
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
   </experiment>
-  <experiment name="ID_8_experiment_US_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
+  <experiment name="ID_12_M_100" repetitions="100" sequentialRunOrder="false" runMetricsEveryStep="false">
     <setup>setup</setup>
     <go>go</go>
     <metric>mean-corr</metric>
@@ -2288,17 +2720,17 @@ NetLogo 6.0.2
     <metric>clustering</metric>
     <metric>avg-prop-same-G</metric>
     <metric>avg-path-length</metric>
-    <metric>in-group-adopters</metric>
-    <metric>out-group-adopters</metric>
-    <metric>adopters</metric>
+    <metric>in-group-adoption</metric>
+    <metric>out-group-adoption</metric>
+    <metric>overall-adoption</metric>
     <enumeratedValueSet variable="PG1">
-      <value value="0.72"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="PG2">
-      <value value="0.13"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="PG3">
-      <value value="0.15"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="PG4">
       <value value="0"/>
@@ -2307,7 +2739,7 @@ NetLogo 6.0.2
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="G-even-split?">
-      <value value="false"/>
+      <value value="true"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="random-net?">
       <value value="false"/>
@@ -2328,13 +2760,20 @@ NetLogo 6.0.2
       <value value="0.001"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="M">
-      <value value="0"/>
+      <value value="0.01"/>
+      <value value="0.025"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Q">
       <value value="10000"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="N">
       <value value="300"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tmean">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Tsd">
+      <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="Z">
       <value value="5"/>
@@ -2343,7 +2782,7 @@ NetLogo 6.0.2
       <value value="9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="G">
-      <value value="3"/>
+      <value value="5"/>
     </enumeratedValueSet>
     <steppedValueSet variable="C" first="0" step="0.1" last="1"/>
     <steppedValueSet variable="H" first="0" step="0.1" last="1"/>
